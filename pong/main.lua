@@ -3,6 +3,10 @@
     use period to separate folders instead of forward slashes (work but only accidently)
 ]]
 push = require 'libraries.push'
+Object = require 'libraries.classic'
+
+require 'scenes.Ball'
+require 'scenes.Paddle'
 
 WINDOW_WIDTH = 1280
 WINDOW_HEIGHT = 720
@@ -16,12 +20,7 @@ FONT_PRESSSTART = 'assets/fonts/PressStart2P-Regular.ttf'
 titleWidth = nil
 titleHeight = nil
 
-PADDLEWIDTH = 5
-PADDLEHEIGHT = 20
-PADDLESPEED = 200
 
-BALLWIDTH = 4
-BALLHEIGHT = 4
 
 
 --[[
@@ -37,7 +36,13 @@ function love.load()
     Already existing objects retain their current scaling filters
 ]]
     love.graphics.setDefaultFilter('nearest', 'nearest')
-                
+       
+    -- Create players and ball's instances. Initialize their positions.
+    player1 = Paddle(10, 30)
+    player2 = Paddle(VIRTUAL_WIDTH - (10 + 5), VIRTUAL_WIDTH - (30 + 20))
+    print(player1, player2)
+    ball = Ball(VIRTUAL_WIDTH / 2 - 2, VIRTUAL_HEIGHT / 2 - 2)
+
     -- setNewFont() combines creating/setting a new font but only works with TTF fonts
     -- FONT = love.graphics.setNewFont(FONT_PRESSSTART, 30)
     FONT = love.graphics.newFont(FONT_PRESSSTART, 8)
@@ -53,19 +58,9 @@ function love.load()
         vsync = true
     })
 
-    -- Initialize player's score and vertical position on screen (horizontal position is fixed for players cannot move horizontally)
+    -- Initialize player's score 
     p1Score = 0
     p2Score = 0
-    p1StartY = 30
-    p2StartY = VIRTUAL_HEIGHT - (PADDLEHEIGHT + 30)
-
-    -- Initialize ball's position to the center of the screen
-    ballStartX = VIRTUAL_WIDTH / 2 - BALLWIDTH / 2
-    ballStartY = VIRTUAL_HEIGHT / 2 - BALLHEIGHT / 2
-
-    -- Lua's version of a ternary operator use and / or logical operators
-    ballDX = math.random(2) == 1 and 100 or -100
-    ballDY = math.random(-50, 50)
 
     -- gamestate variable is used to transition between different parts of the game and determine behavior during update/draw (render)
     gamestate = 'start'
@@ -74,27 +69,30 @@ end
 
 function love.update(dt)
     -- Update Player 1 vertical movement
-    --[[
-        math.min and math.max are used to clamp the players movement so that they cannot go beyond the limits of the screen
-    ]]
     if love.keyboard.isDown('w') then
-        p1StartY = math.max(0, p1StartY + -PADDLESPEED * dt)
+        player1.dY = -player1.speed
     elseif love.keyboard.isDown('s') then
-        p1StartY = math.min(VIRTUAL_HEIGHT - PADDLEHEIGHT, p1StartY + PADDLESPEED * dt)
+        player1.dY = player1.speed
+    else
+        player1.dY = 0
     end
 
     -- Update Player 2 vertical movement
     if love.keyboard.isDown('up') then
-        p2StartY = math.max(0, p2StartY + -PADDLESPEED * dt)
+        player2.dY = -player2.speed
     elseif love.keyboard.isDown('down') then
-        p2StartY = math.min(VIRTUAL_HEIGHT - PADDLEHEIGHT, p2StartY + PADDLESPEED * dt)
+        player2.dY = player2.speed
+    else
+        player2.dY = 0
     end
 
     -- Update the ball based on its deltaX and deltaY but only if in the right game state
     if gamestate == 'play' then
-        ballStartX = ballStartX + ballDX * dt
-        ballStartY = ballStartY + ballDY * dt
+        ball:update(dt)
     end
+
+    player1:update(dt)
+    player2:update(dt)
 end
 
 function love.draw()
@@ -119,12 +117,11 @@ function love.draw()
     -- love.graphics.print(tostring(p2Score), VIRTUAL_WIDTH / 2 + 30, VIRTUAL_HEIGHT / 3)    
 
     -- Render paddle left
-    love.graphics.rectangle('fill', 10, p1StartY, PADDLEWIDTH, PADDLEHEIGHT)
+    player1:render()
     -- Render paddle right
-    love.graphics.rectangle('fill', VIRTUAL_WIDTH - (10 + PADDLEWIDTH), p2StartY, PADDLEWIDTH, PADDLEHEIGHT)
+    player2:render()
     -- Render ball
-    love.graphics.rectangle('fill', ballStartX, ballStartY, BALLWIDTH, BALLHEIGHT)
-
+    ball:render()
     push:apply('end')
 end
   
@@ -137,10 +134,7 @@ function love.keypressed(key)
         else
             -- In 'start' state, reinitialize the ball's position and randomly set its x and y velocity
             gamestate = 'start'
-            ballStartX = VIRTUAL_WIDTH / 2 - BALLWIDTH / 2
-            ballStartY = VIRTUAL_HEIGHT / 2 - BALLHEIGHT / 2
-            ballDX = math.random(2) == 1 and 100 or -100
-            ballDY = math.random(-50, 50) * 1.5
+            ball:reset()
         end
     end
 end
