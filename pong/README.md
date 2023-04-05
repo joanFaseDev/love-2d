@@ -9,7 +9,7 @@ Goals for this particular lecture are listed in **Lecture's scope**
 * **love.load** can be overrided and is called once at the beginning of the game
 * **love.update** can be overrided and is called every frame. love2d passed in it a dt variable representing the elapsed time in seconds since the last frame
 * **love.draw** can be overrided and is also called every frame but after **love.update**. Render things on screen once they have changed.
-* **delta time (dt)** is used to scale any change in the game for even behavior across frame rates
+* **delta time (dt)** is used to scale any change in the game for even behavior across frame rates (framerate-independant)
 
 * **love.keypressed** callback function triggered when a key is pressed
 * **require** opens and executes lua modules
