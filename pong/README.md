@@ -31,3 +31,6 @@ Goals for this particular lecture are listed in **Lecture's scope**
 
 **name - author - github - description**
 * push - Ulydev - https://github.com/Ulydev/push - Resolution handling library allowing developers to focus on making their game with a fixed resolution
+
+## Sources
+- https://developer.mozilla.org/en-US/docs/Games/Techniques/2D_collision_detection

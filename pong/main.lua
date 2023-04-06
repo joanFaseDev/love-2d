@@ -68,8 +68,51 @@ function love.load()
 end
 
 function love.update(dt)
+    if gamestate == 'play' then
+        if ball:collision(player1) then
+            --[[
+                If collision, return the ball into the opposite direction and slightly increase its speed.
+                Also immediately change the ball x position to the right edge of the player1 to prevent the ball being stuck 'inside' the player
+            ]]
+            ball.dX = -ball.dX * 1.03
+            ball.x = player1.x + player1.width
+
+            -- Keep the velocity in the same vertical direction but randomize it
+            if ball.dY < 0 then
+                ball.dY = -math.random(10, 150)
+            else
+                ball.dY = math.random(10, 150)
+            end
+        end
+
+        if ball:collision(player2) then
+            ball.dX = -ball.dX * 1.03
+            ball.x = player2.x - ball.width
+
+            if ball.dY < 0 then
+                ball.dY = -math.random(10, 150)
+            else
+                ball.dY = math.random(10, 150)
+            end
+        end
+
+        --[[
+            Check for top and bottom screen's edge collision. If true, reverse the direction so the ball go the opposite way.
+        ]]
+        if ball.y <= 0 then
+            ball.y = 0
+            ball.dY = -ball.dY
+        end
+
+        if ball.y > VIRTUAL_HEIGHT - ball.height then
+            ball.y = VIRTUAL_HEIGHT - ball.height
+            ball.dY = -ball.dY
+        end
+    end
+
+
     -- Update Player 1 vertical movement
-    if love.keyboard.isDown('w') then
+    if love.keyboard.isDown('w') or love.keyboard.isDown('z') then
         player1.dY = -player1.speed
     elseif love.keyboard.isDown('s') then
         player1.dY = player1.speed
@@ -122,6 +165,8 @@ function love.draw()
     player2:render()
     -- Render ball
     ball:render()
+
+    displayFPS()
     push:apply('end')
 end
   
@@ -137,4 +182,11 @@ function love.keypressed(key)
             ball:reset()
         end
     end
+end
+
+-- Render actual frames per second in the left upper side of the screen
+function displayFPS()
+    love.graphics.setFont(FONT)
+    love.graphics.setColor(0 / 255, 255 / 255, 0 / 255, 1)
+    love.graphics.print('FPS: ' .. tostring(love.timer.getFPS()), 10, 10)
 end

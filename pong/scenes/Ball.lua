@@ -23,6 +23,24 @@ function Ball:reset()
     self.dY = math.random(-50, 50)
 end
 
+-- Use the AABB (Axis Aligned Bounding Box) algorithms to check if there is collision between the ball and one of the paddle
+function Ball:collision(paddle)
+    -- Check if either of the left edge of the ball / paddle is farther than the left edge of the paddle / ball
+    if self.x > paddle.x + paddle.width or
+        paddle.x > self.x + self.width then
+            return false;
+    end
+
+    -- Check if the top edge of the ball / paddle is further than the top edge of the paddle / ball
+    if self.y > paddle.y + paddle.height or
+        paddle.y > self.y + self.height then
+            return false;
+    end
+    
+    -- If none of the above is true then there is collision
+    return true;
+end
+
 -- Update a ball's position with its velocity multiply by delta time
 function Ball:update(dt)
     self.x = self.x + self.dX * dt
