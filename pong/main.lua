@@ -46,7 +46,7 @@ function love.load()
     -- setNewFont() combines creating/setting a new font but only works with TTF fonts
     -- FONT = love.graphics.setNewFont(FONT_PRESSSTART, 30)
     FONT = love.graphics.newFont(FONT_PRESSSTART, 8)
-    SCOREFONT = love.graphics.newFont(FONT_PRESSSTART, 24)
+    SCOREFONT = love.graphics.newFont(FONT_PRESSSTART, 24 s)
 
     titleWidth = FONT:getWidth(TITLE)
     titleHeight = FONT:getHeight(TITLE)
@@ -62,12 +62,25 @@ function love.load()
     p1Score = 0
     p2Score = 0
 
+    -- Have a value of either 1 or 2 which corresponds to the player that is actually serving
+    servingPlayer = 1
+
     -- gamestate variable is used to transition between different parts of the game and determine behavior during update/draw (render)
     gamestate = 'start'
     
 end
 
 function love.update(dt)
+    -- Before switching to 'play' state, initialize the ball's velocity based on the player who have the serve
+    if gamestate == 'serve' then
+        ball.dY = math.random(-50, 50)
+        if servingPlayer == 1 then
+            ball.dX = math.random(140, 200)
+        else
+            ball.dX = -math.random(140, 200)
+        end
+    end
+
     if gamestate == 'play' then
         if ball:collision(player1) then
             --[[
@@ -110,6 +123,22 @@ function love.update(dt)
         end
     end
 
+    --[[ 
+        Each time a player fail to send back the ball, the other one score a point. Losing player get the serve, ball's position is reset and game's state is changed.
+    ]]
+    if ball.x < 0 then
+        servingPlayer = 1
+        p2Score = p2Score + 1
+        ball:reset()
+        gamestate = 'start'
+    end
+
+    if ball.x > VIRTUAL_WIDTH then
+        servingPlayer = 2
+        p1Score = p1Score + 1
+        gameState = 'start'
+        ball:reset()
+    end
 
     -- Update Player 1 vertical movement
     if love.keyboard.isDown('w') or love.keyboard.isDown('z') then
@@ -147,17 +176,21 @@ function love.draw()
     -- To change font color, add a table as a first argument like this {{r, g, b, a}, string1, {r, g, b, a}, string2, ...}
 
     love.graphics.setFont(FONT)
-    if gamestate == 'start' then
-        TITLE = 'Welcome Start State!'
-    else
-        TITLE = 'Welcome Play State!'
-    end
-    love.graphics.printf(TITLE, 0 , titleHeight, VIRTUAL_WIDTH, 'center')
 
-    -- Change font to render players' scores
-    -- love.graphics.setFont(SCOREFONT)
-    -- love.graphics.print(tostring(p1Score), VIRTUAL_WIDTH / 2 - (30 + SCOREFONT:getWidth(tostring(p1Score))), VIRTUAL_HEIGHT / 3)
-    -- love.graphics.print(tostring(p2Score), VIRTUAL_WIDTH / 2 + 30, VIRTUAL_HEIGHT / 3)    
+    displayScore()
+
+    -- Render different helping messages to the players depending of the game stage
+    if gamestate == 'start' then
+        love.graphics.setFont(FONT)
+        love.graphics.printf('Welcome to Pong!', 0, 10, VIRTUAL_WIDTH, 'center')
+        love.graphics.printf('Press Enter to begin!', 0, 20, VIRTUAL_WIDTH, 'center')
+    elseif gamestate == 'serve' then
+        love.graphics.setFont(FONT)
+        love.graphics.printf('Player ' .. tostring(servingPlayer) .. '\'s serve!', 0, 10, VIRTUAL_WIDTH, 'center')
+        love.graphics.printf('Press Enter to serve!', 0, 20, VIRTUAL_WIDTH, 'center')
+    elseif gamestate == 'play' then
+        -- no message yet
+    end
 
     -- Render paddle left
     player1:render()
@@ -175,11 +208,9 @@ function love.keypressed(key)
         love.event.quit()
     elseif key == 'enter' or key == 'return' then
         if gamestate == 'start' then 
+            gamestate = 'serve'
+        elseif gamestate == 'serve' then
             gamestate = 'play'
-        else
-            -- In 'start' state, reinitialize the ball's position and randomly set its x and y velocity
-            gamestate = 'start'
-            ball:reset()
         end
     end
 end
@@ -189,4 +220,12 @@ function displayFPS()
     love.graphics.setFont(FONT)
     love.graphics.setColor(0 / 255, 255 / 255, 0 / 255, 1)
     love.graphics.print('FPS: ' .. tostring(love.timer.getFPS()), 10, 10)
+end
+
+-- Render the two player's scores
+function displayScore()
+    -- Change font to render players' scores
+    love.graphics.setFont(SCOREFONT)
+    love.graphics.print(tostring(p1Score), VIRTUAL_WIDTH / 2 - (30 + SCOREFONT:getWidth(tostring(p1Score))), VIRTUAL_HEIGHT / 3)
+    love.graphics.print(tostring(p2Score), VIRTUAL_WIDTH / 2 + 30, VIRTUAL_HEIGHT / 3)  
 end
