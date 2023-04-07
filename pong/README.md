@@ -12,6 +12,7 @@ Goals for this particular lecture are listed in **Lecture's scope**
 * **delta time (dt)** is used to scale any change in the game for even behavior across frame rates (framerate-independant)
 
 * **love.keypressed** callback function triggered when a key is pressed
+* **love.audio.newSource** create a new audio from a file path 
 * **require** opens and executes lua modules
 
 ## Lecture's scope
