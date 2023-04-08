@@ -64,8 +64,8 @@ function love.load()
     })
 
     -- Initialize player's score 
-    p1Score = 0
-    p2Score = 0
+    p1Score = 9
+    p2Score = 9
 
     -- Have a value of either 1 or 2 which corresponds to the player that is actually serving
     servingPlayer = 1
