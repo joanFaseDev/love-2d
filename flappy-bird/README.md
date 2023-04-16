@@ -1,5 +1,6 @@
 # Flappy Bird
 
+- **Parallax scrolling**: technique in computer graphics where two images (usually background and foreground) moves at different speed therefore creating an illusion of depth.
 
 ## Sources
 
