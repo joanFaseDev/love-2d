@@ -1,4 +1,6 @@
-push = require 'push' 
+push = require '/libs.push' 
+
+require './scenes.Bird'
 
 WINDOW_WIDTH = 1280
 WINDOW_HEIGTH = 720
@@ -24,6 +26,8 @@ local GROUND_SCROLL_SPEED = 60
 ]]
 local BACKGROUND_LOOPING_POINT = 413
 
+bird = Bird()
+
 -- Is called at the beginning of the love's program execution
 function love.load()
     -- Apply nearest default filtering on upscale and downscale which means crisp pixel art and less bluriness
@@ -44,6 +48,8 @@ function love.update(dt)
     ]]
     backgroundScrollX = (backgroundScrollX + BACKGROUND_SCROLL_SPEED * dt) % BACKGROUND_LOOPING_POINT
     groundScrollX = (groundScrollX + GROUND_SCROLL_SPEED * dt) % VIRTUAL_WIDTH
+
+    bird:update(dt)
 end
 
 function love.draw()
@@ -54,6 +60,8 @@ function love.draw()
     ]]
     love.graphics.draw(background, -backgroundScrollX, 0)
     love.graphics.draw(ground, -groundScrollX, VIRTUAL_HEIGHT - ground:getHeight())
+
+    bird:render()
 
     push:finish()
 end
