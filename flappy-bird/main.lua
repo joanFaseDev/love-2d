@@ -40,6 +40,9 @@ function love.load()
         fullscreen = false, 
         resizable = true  
     })
+
+    -- Declare a new love.keyboard property and initialize it with an empty table
+    love.keyboard.keyPressed = {}
 end
 
 function love.update(dt)
@@ -50,6 +53,12 @@ function love.update(dt)
     groundScrollX = (groundScrollX + GROUND_SCROLL_SPEED * dt) % VIRTUAL_WIDTH
 
     bird:update(dt)
+
+    --[[ 
+        Reset the keyPressed table every frame but only after love2d checked for any input
+        All inputs / system events are processed at the beginning of every frame, before love.update is executed
+    ]]
+    love.keyboard.keyPressed = {}
 end
 
 function love.draw()
@@ -70,9 +79,23 @@ function love.resize(w, h)
     push:resize(w, h)
 end
 
+--[[ 
+    Callback function triggered every time a key is pressed
+    Beware that declaring a love.keypressed() function in another class would overwrite this implementation
+]]
 function love.keypressed(key)
+    love.keyboard.keyPressed[key] = true
+
     -- Press Escape to quit the game
     if key == 'escape' then
         love.event.quit()
+    end
+end
+
+function love.keyboard.wasPressed(key)
+    if love.keyboard.keyPressed[key] then
+        return true
+    else
+        return false
     end
 end

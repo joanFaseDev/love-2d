@@ -1,7 +1,7 @@
 Object = require './libs.classic'
 Bird = Object:extend()
 
-local GRAVITY = 4
+local GRAVITY = 12
 
 -- Create a new instance of the Bird class
 function Bird:new()
@@ -28,4 +28,8 @@ function Bird:update(dt)
 
     -- Velocity still need to be applied to the bird's y position for any change to be visible
     self.y = self.y + self.dY
+
+    if love.keyboard.wasPressed('space') then
+        self.dY = -3
+    end
 end
