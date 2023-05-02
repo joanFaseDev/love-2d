@@ -1,7 +1,7 @@
 Object = require './libs.classic'
 Bird = Object:extend()
 
-local GRAVITY = 12
+local GRAVITY = 10
 
 -- Create a new instance of the Bird class
 function Bird:new()
@@ -30,6 +30,6 @@ function Bird:update(dt)
     self.y = self.y + self.dY
 
     if love.keyboard.wasPressed('space') then
-        self.dY = -3
+        self.dY = -2
     end
 end

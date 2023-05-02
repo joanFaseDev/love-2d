@@ -1,6 +1,8 @@
 push = require '/libs.push' 
 
 require './scenes.Bird'
+require './scenes.Pipe'
+require './scenes.PipesPair'
 
 WINDOW_WIDTH = 1280
 WINDOW_HEIGTH = 720
@@ -21,12 +23,22 @@ local groundScrollX = 0
 local BACKGROUND_SCROLL_SPEED = 30
 local GROUND_SCROLL_SPEED = 60
 
+local spawnTimer = 0
+
 --[[ 
     413 isn't an arbitrary value, it's the exact point where the pattern of the image's far left side starts again therefore forming an uninterrupted loop.
 ]]
 local BACKGROUND_LOOPING_POINT = 413
 
-bird = Bird()
+local bird = Bird()
+local pipes = {}
+local pipesPair = {}
+
+--[[ 
+    Keep the y position of the last recorded pipesPair instance. Used to make sure the gap between the pipesPair
+    instances transition nicely and is actually beatable by the player.
+]]
+local lastPipesPairY = -PIPE_HEIGHT + math.random(80) + 20
 
 -- Is called at the beginning of the love's program execution
 function love.load()
@@ -41,6 +53,9 @@ function love.load()
         resizable = true  
     })
 
+    -- Very simple way to prevent having the same seed twice in a row.
+    math.randomseed(os.time())
+
     -- Declare a new love.keyboard property and initialize it with an empty table
     love.keyboard.keyPressed = {}
 end
@@ -53,6 +68,43 @@ function love.update(dt)
     groundScrollX = (groundScrollX + GROUND_SCROLL_SPEED * dt) % VIRTUAL_WIDTH
 
     bird:update(dt)
+
+    spawnTimer = spawnTimer + dt
+
+    -- Every 2 seconds, add a Pipe instance to the table and reset the countdown
+    if spawnTimer > 2 then
+        --[[
+            Modify slightly the last Y coordinate we placed so pipe gaps aren't too
+            far apart.
+            No higher than 10 pixels below the top edge of the screen and no lower than
+            a gap length (local gap height is 90 pixels cf. PipesPair.lua) from the bottom
+        ]]
+        local y = math.max(
+            -PIPE_HEIGHT + 10,
+            math.min(
+                lastY + math.random(-20, 20),
+                VIRTUAL_HEIGHT - 90 - PIPE_HEIGHT
+            )
+        )
+        lastY = y
+
+        table.insert(pipesPair, PipesPair(y))
+        spawnTimer = 0
+    end
+
+    --[[ 
+        Make all the pipes move towards the left side of the screen.
+        If a pipe leaves the screen that way, remove it from the table.
+    ]]
+    for key, pair in pairs(pipesPair) do
+        pair:update(dt)
+    end
+
+    for key, pair in pairs(pipesPair) do
+        if pair.remove then
+            table.remove(pipesPair, key)
+        end
+    end
 
     --[[ 
         Reset the keyPressed table every frame but only after love2d checked for any input
@@ -68,6 +120,12 @@ function love.draw()
         Background and ground's x axe is negative so to be directed in the opposite direction of the player therefore creating the illusion of movement
     ]]
     love.graphics.draw(background, -backgroundScrollX, 0)
+
+    -- Pipes are rendered between the background and the ground (the latter hides the bottom of each pipe) 
+    for key, pair in pairs(pipesPair) do
+        pair:render()
+    end
+
     love.graphics.draw(ground, -groundScrollX, VIRTUAL_HEIGHT - ground:getHeight())
 
     bird:render()
