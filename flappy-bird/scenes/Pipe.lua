@@ -6,11 +6,11 @@ Pipe = Object:extend()
     The most efficient way is to instanciate one image only and to use it to render all pipes.
 ]]
 local PIPE_IMAGE = love.graphics.newImage('assets/images/pipe.png')
-local PIPE_SPEED = 60
+PIPE_SPEED = 60
 
 -- True size of the pipe image
 PIPE_WIDTH = 70
-PIPE_HEIGHT = 288
+PIPE_HEIGHT = 288 
 
 -- New pipes are instantiated just outside of the screen's right side with random heights.
 function Pipe:new(orientation, y)
@@ -29,5 +29,11 @@ end
 
 -- Render the instance just outside of screen
 function Pipe:render()
-    love.graphics.draw(PIPE_IMAGE, self.x, self.y)
+    love.graphics.draw(
+        PIPE_IMAGE, self.x,
+        (self.orientation == 'top' and self.y + PIPE_HEIGHT or self.y),
+        0, 
+        1, 
+        self.orientation == 'top' and -1 or 1
+    )
 end

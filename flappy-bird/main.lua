@@ -40,6 +40,9 @@ local pipesPair = {}
 ]]
 local lastPipesPairY = -PIPE_HEIGHT + math.random(80) + 20
 
+-- Scrolling variable to pause the game when we collide with a pipe.
+local scrolling = true
+
 -- Is called at the beginning of the love's program execution
 function love.load()
     -- Apply nearest default filtering on upscale and downscale which means crisp pixel art and less bluriness
@@ -61,48 +64,53 @@ function love.load()
 end
 
 function love.update(dt)
-    --[[ 
-        Once the scrolling X values reach their looping point value the modulo operator will return 0 therefore reinitializing the scrolling X values and creating a perfect loop for the background/ground
-    ]]
-    backgroundScrollX = (backgroundScrollX + BACKGROUND_SCROLL_SPEED * dt) % BACKGROUND_LOOPING_POINT
-    groundScrollX = (groundScrollX + GROUND_SCROLL_SPEED * dt) % VIRTUAL_WIDTH
-
-    bird:update(dt)
-
-    spawnTimer = spawnTimer + dt
-
-    -- Every 2 seconds, add a Pipe instance to the table and reset the countdown
-    if spawnTimer > 2 then
+    if scrolling then
         --[[
-            Modify slightly the last Y coordinate we placed so pipe gaps aren't too
-            far apart.
-            No higher than 10 pixels below the top edge of the screen and no lower than
-            a gap length (local gap height is 90 pixels cf. PipesPair.lua) from the bottom
+            Once the scrolling X values reach their looping point value the modulo operator will return 0 therefore reinitializing the scrolling X values and creating a perfect loop for the background/ground
         ]]
-        local y = math.max(
-            -PIPE_HEIGHT + 10,
-            math.min(
-                lastY + math.random(-20, 20),
-                VIRTUAL_HEIGHT - 90 - PIPE_HEIGHT
+        backgroundScrollX = (backgroundScrollX + BACKGROUND_SCROLL_SPEED * dt) % BACKGROUND_LOOPING_POINT
+        groundScrollX = (groundScrollX + GROUND_SCROLL_SPEED * dt) % VIRTUAL_WIDTH
+        bird:update(dt)
+        spawnTimer = spawnTimer + dt
+        -- Every 2 seconds, add a Pipe instance to the table and reset the countdown
+        if spawnTimer > 2 then
+            --[[
+                Modify slightly the last Y coordinate we placed so pipe gaps aren't too
+                far apart.
+                No higher than 10 pixels below the top edge of the screen and no lower than
+                a gap length (local gap height is 90 pixels cf. PipesPair.lua) from the bottom
+            ]]
+            local y = math.max(
+                -PIPE_HEIGHT + 10,
+                math.min(
+                    lastPipesPairY + math.random(-20, 20),
+                    VIRTUAL_HEIGHT - 90 - PIPE_HEIGHT
+                )
             )
-        )
-        lastY = y
+            lastPipesPairY = y
+            table.insert(pipesPair, PipesPair(y))
+            spawnTimer = 0
+        end
+        --[[
+            Make all the pipes move towards the left side of the screen.
+            If a pipe leaves the screen that way, remove it from the table.
+        ]]
+        for key, pair in pairs(pipesPair) do
+            pair:update(dt)
 
-        table.insert(pipesPair, PipesPair(y))
-        spawnTimer = 0
-    end
+            -- If bird is colliding with pipes then...
+            for l, pipe in pairs(pair.pipes) do
+                if bird:collides(pipe) then
+                    -- ...pause the game
+                    scrolling = false
+                end
+            end
+        end
 
-    --[[ 
-        Make all the pipes move towards the left side of the screen.
-        If a pipe leaves the screen that way, remove it from the table.
-    ]]
-    for key, pair in pairs(pipesPair) do
-        pair:update(dt)
-    end
-
-    for key, pair in pairs(pipesPair) do
-        if pair.remove then
-            table.remove(pipesPair, key)
+        for key, pair in pairs(pipesPair) do
+            if pair.remove then
+                table.remove(pipesPair, key)
+            end
         end
     end
 
